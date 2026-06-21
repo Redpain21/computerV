@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>MoodMeter AI</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+<h1>
+🎭 MoodMeter
+</h1>
+
+<h2>
+Decodificador de Expresiones Faciales con IA
+</h2>
+
+
+<input 
+type="file"
+id="image"
+/>
+
+
+<br><br>
+
+
+<button onclick="scan()">
+Escanear Rostro
+</button>
+
+
+<h2 id="result">
+Esperando análisis...
+</h2>
+
+
+<h3>
+📊 Distribución emocional
+</h3>
+
+
+<div id="emotions">
+
+</div>
+
+
+<h3>
+📈 Mood Timeline
+</h3>
+
+
+<canvas 
+id="timeline"
+width="400"
+height="150">
+</canvas>
+
+
+</div>
+
+
+
+<script>
+
+
+let history=[];
+
+
+
+async function scan(){
+
+
+const file =
+document.getElementById("image").files[0];
+
+
+if(!file){
+
+alert("Selecciona una imagen primero");
+
+return;
+
+}
+
+
+let formData = new FormData();
+
+
+formData.append(
+"file",
+file
+);
+
+
+
+let response =
+await fetch(
+"/analyze",
+{
+method:"POST",
+body:formData
+}
+);
+
+
+
+let data =
+await response.json();
+
+
+
+document.getElementById("result")
+.innerHTML =
+"🎭 Emoción dominante: "
++
+data.dominant;
+
+
+
+let html="";
+
+
+
+for(let emotion in data.emotions){
+
+
+let value =
+data.emotions[emotion].toFixed(2);
+
+
+
+html += `
+
+
+<div class="emotion">
+
+<p>
+${emotion}
+</p>
+
+
+<div class="bar">
+
+
+<div class="fill ${emotion}" 
+style="width:${value}%">
+
+${value}%
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+`;
+
+}
+
+
+
+document.getElementById("emotions")
+.innerHTML=html;
+
+
+
+// Guardar emoción en historial
+
+history.push(data.dominant);
+
+
+drawTimeline();
+
+
+}
+
+
+
+
+
+function drawTimeline(){
+
+
+let canvas =
+document.getElementById("timeline");
+
+
+let ctx =
+canvas.getContext("2d");
+
+
+
+ctx.clearRect(
+0,
+0,
+400,
+150
+);
+
+
+
+ctx.beginPath();
+
+
+
+history.forEach(
+(mood,index)=>{
+
+
+let x =
+index * 50 + 20;
+
+
+let y = 100;
+
+
+
+if(mood=="happy")
+y=30;
+
+
+if(mood=="surprise")
+y=50;
+
+
+if(mood=="angry")
+y=70;
+
+
+if(mood=="sad")
+y=120;
+
+
+if(mood=="fear")
+y=90;
+
+
+
+if(index==0){
+
+ctx.moveTo(
+x,
+y
+);
+
+}
+
+else{
+
+ctx.lineTo(
+x,
+y
+);
+
+}
+
+
+
+});
+
+
+ctx.stroke();
+
+
+
+}
+
+
+
+
+</script>
+
+
+</body>
+
+</html>
